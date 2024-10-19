@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from fastapi_cache import FastAPICache
@@ -26,6 +26,10 @@ limiter = Limiter(key_func=get_remote_address)
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 
+# Function to create JWT access tokens
+def create_access_token(data: dict):
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
 # Application Startup Event
 @app.on_event("startup")
 async def startup():
@@ -36,20 +40,16 @@ async def startup():
     # Configure logging
     logger.add("file.log", rotation="500 MB", level="INFO")
 
-# Function to create JWT access tokens
-def create_access_token(data: dict):
-    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
-
-# Dependency to get the current user from the token
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user = payload.get("sub")
-        if user is None:
-            raise HTTPException(status_code=400, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate token")
-    return user
+# Endpoint to generate JWT token
+@app.post("/token")
+async def login(form: OAuth2PasswordRequestForm = Depends()):
+    # Here you should validate the user's credentials (e.g., check in a database)
+    # For simplicity, this example assumes a hardcoded valid user
+    if form.username == "testuser" and form.password == "testpassword":  # Replace with actual validation
+        access_token = create_access_token(data={"sub": form.username})
+        return {"access_token": access_token, "token_type": "bearer"}
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
 
 # Flight search endpoint with rate limiting
 @app.post("/v1/flights/search/")
