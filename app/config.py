@@ -5,6 +5,6 @@ class Settings:
     FLYHUB_USERNAME: str = os.getenv("FLYHUB_USERNAME")
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your_secret_key")  # Change this to a strong secret key
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "paroshmahmud")  # Change this to a strong secret key
 
 settings = Settings()
